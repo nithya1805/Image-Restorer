@@ -1,5 +1,7 @@
-IMAGE QUALITY CHECKER (shadow + blur detection)
+IMAGE RESTORER
 ================================================
+Checks document images for warping, shadows, blur, low resolution and tears,
+and corrects only what it finds (UVDoc, DocRes, Real-ESRGAN, big-LaMa).
 
 Everything the app needs is in this folder:
 
@@ -15,9 +17,42 @@ Everything the app needs is in this folder:
 
 REQUIREMENTS
   * Windows 10/11, 64-bit
-  * Python 3.12 (64-bit) from https://www.python.org/downloads/
-    (during install tick "Add python.exe to PATH")
-  * Internet connection for the first setup (about 1 GB of packages is downloaded)
+  * Python 3.12 or newer (64-bit) from https://www.python.org/downloads/
+    (during install tick "Add python.exe to PATH"); tested with 3.14
+  * Internet connection for the first setup (about 3 GB of packages is downloaded)
+  * Optional but much faster: an NVIDIA GPU (see the GPU section below)
+
+SETTING UP A FRESH CLONE (from GitHub)
+  The repository holds the source code only. The model weights (~700 MB) and
+  two external projects are NOT in it and must be added by hand.
+
+  1. Python packages:
+       python -m venv .venv
+       .venv\Scripts\pip install -r requirements.txt --extra-index-url https://download.pytorch.org/whl/cu126
+     (no NVIDIA GPU? use .../whl/cpu and the +cpu versions in requirements.txt)
+
+  2. Model weights -> put them in models\ :
+       shadow_model.onnx       trained for this project (shadow detection)
+       blur_model.pt           trained for this project (blur detection)
+       docres.pkl              DocRes weights: https://github.com/ZZZHANG-jx/DocRes
+       RealESRGAN_x4plus.pth   https://github.com/xinntao/Real-ESRGAN/releases
+       RealESRGAN_x2plus.pth   (optional: 2x instead of 4x)
+       big-lama.pt             https://github.com/Sanster/models/releases/download/add_big_lama/big-lama.pt
+
+  3. Two external projects, for their code (and the UVDoc weights):
+       DocRes  -> C:\DocRes   https://github.com/ZZZHANG-jx/DocRes
+                  (only models/restormer_arch.py is loaded)
+       UVDoc   -> C:\UVDoc    https://github.com/tanguymagne/UVDoc
+                  (model.py and model\best_model.pkl)
+     Other locations are fine: set "docres_code_dir", "uvdoc_code_dir" and
+     "uvdoc_model_path" in the CONFIG block at the top of app.py.
+
+  4. Start it:
+       .venv\Scripts\python app.py
+     The start-up lines show which models loaded and whether the GPU is used.
+
+  Note: setup.bat and start_server.bat are convenience scripts for the local
+  Windows machine and are not part of the repository.
 
 FIRST TIME
   1. Double-click setup.bat and wait until it says "Setup finished".
