@@ -1,0 +1,41 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Virtual environment
+.venv/
+venv/
+env/
+ENV/
+
+# ML model weights (large binary files — download separately)
+models/*.pt
+models/*.pth
+models/*.pkl
+models/*.onnx
+
+# Uploaded images & processed results (user data, not source code)
+input/
+results/
+test_shadow/
+tested/
+
+# IDE & OS
+.vscode/
+.idea/
+*.suo
+*.user
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# Logs
+*.log
