@@ -7,1285 +7,369 @@
   <title>Image Restorer</title>
   <style>
     :root {
-      --bg: #f3f5f9;
-      --card: #fff;
-      --text: #1d2433;
-      --muted: #6b7385;
-      --border: #e2e6ee;
-      --primary: #3b5bdb;
-      --primary-dark: #2f4ac0;
-      --primary-soft: #edf1ff;
-      --shadow: #d6336c;
-      --shadow-soft: #fdecf2;
-      --blur: #e8590c;
-      --blur-soft: #fff1e6;
-      --good: #2b8a3e;
-      --good-soft: #e9f7ec;
-      --fixed: #1c7ed6;
-      --upscale: #7048e8;
-      --upscale-soft: #f3f0ff;
-      --dewarp: #0c8599;
-      --dewarp-soft: #e3fafc;
-      --tear: #c2255c;
-      --tear-soft: #fff0f6;
-      --err: #868e96;
-      --err-soft: #f1f3f5;
-      --fail: #c92a2a;
+      --bg: #f3f5f9; --card: #fff; --text: #1d2433; --muted: #6b7385; --border: #e2e6ee;
+      --primary: #3b5bdb; --primary-dark: #2f4ac0; --primary-soft: #edf1ff;
+      --good: #2b8a3e; --good-soft: #e9f7ec; --warn: #e8590c; --warn-soft: #fff1e6;
+      --fail: #c92a2a; --fail-soft: #fff0f0; --muted-soft: #f1f3f5;
       --radius: 14px;
     }
-
-    * {
-      box-sizing: border-box;
-    }
-
-    body {
-      margin: 0;
-      font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
-      background: var(--bg);
-      color: var(--text);
-    }
-
-    /* ---------- header ---------- */
-    .topbar {
-      background: linear-gradient(120deg, #2f4ac0, #5c7cfa);
-      color: #fff;
-    }
-
-    .topbar .inner {
-      max-width: 1180px;
-      margin: 0 auto;
-      padding: 28px 20px 84px;
-    }
-
-    .topbar h1 {
-      margin: 0;
-      font-size: 1.75rem;
-      font-weight: 700;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .topbar h1 a {
-      color: inherit;
-      text-decoration: none;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .topbar p {
-      margin: 6px 0 0;
-      opacity: .85;
-    }
-
-    main {
-      max-width: 1180px;
-      margin: -60px auto 0;
-      padding: 0 20px 60px;
-    }
-
-    /* ---------- upload panel ---------- */
-    .panel {
-      background: var(--card);
-      border-radius: var(--radius);
-      box-shadow: 0 8px 30px rgba(30, 40, 80, .08);
-      padding: 24px;
-    }
-
-    .drop {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-      min-height: 170px;
-      padding: 24px;
-      border: 2px dashed #c5cde0;
-      border-radius: 12px;
-      background: #fafbfe;
-      cursor: pointer;
-      text-align: center;
-      transition: .15s;
-    }
-
-    .drop:hover,
-    .drop.over {
-      border-color: var(--primary);
-      background: var(--primary-soft);
-    }
-
-    .drop input {
-      display: none;
-    }
-
-    .drop .icon {
-      width: 52px;
-      height: 52px;
-      border-radius: 50%;
-      background: var(--primary-soft);
-      color: var(--primary);
-      display: grid;
-      place-items: center;
-      margin-bottom: 4px;
-    }
-
-    .drop strong {
-      font-size: 1.05rem;
-    }
-
-    .drop .hint {
-      color: var(--muted);
-      font-size: .88rem;
-    }
-
-    .thumbs {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      margin-top: 14px;
-    }
-
-    .thumbs:empty {
-      display: none;
-    }
-
-    .thumbs img {
-      width: 64px;
-      height: 64px;
-      object-fit: cover;
-      border-radius: 8px;
-      border: 1px solid var(--border);
-    }
-
-    .thumbs .more {
-      width: 64px;
-      height: 64px;
-      border-radius: 8px;
-      background: var(--err-soft);
-      display: grid;
-      place-items: center;
-      color: var(--muted);
-      font-weight: 600;
-    }
-
-    .controls {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      justify-content: space-between;
-      gap: 16px;
-      margin-top: 18px;
-    }
-
-    .checks {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-      align-items: center;
-    }
-
-    .checks .lbl {
-      color: var(--muted);
-      font-size: .9rem;
-      margin-right: 2px;
-    }
-
-    .toggle {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      padding: 8px 14px;
-      border: 1px solid var(--border);
-      border-radius: 999px;
-      cursor: pointer;
-      user-select: none;
-      font-weight: 500;
-    }
-
-    .toggle input {
-      accent-color: var(--primary);
-      width: 16px;
-      height: 16px;
-      margin: 0;
-    }
-
-    .toggle:has(input:checked) {
-      border-color: var(--primary);
-      background: var(--primary-soft);
-      color: var(--primary-dark);
-    }
-
-    .btn {
-      padding: 12px 28px;
-      font-size: 1rem;
-      font-weight: 600;
-      border: 0;
-      border-radius: 10px;
-      background: var(--primary);
-      color: #fff;
-      cursor: pointer;
-      transition: .15s;
-    }
-
-    .btn:hover {
-      background: var(--primary-dark);
-    }
-
-    .btn:disabled {
-      background: #a5b4f3;
-      cursor: default;
-    }
-
-    .btn-outline {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      padding: 10px 18px;
-      font-weight: 600;
-      border: 1px solid var(--primary);
-      border-radius: 10px;
-      color: var(--primary);
-      background: var(--card);
-      cursor: pointer;
-      text-decoration: none;
-    }
-
-    .btn-outline:hover {
-      background: var(--primary-soft);
-    }
-
-    .or {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 12px;
-      margin-top: 12px;
-      color: var(--muted);
-      font-size: .9rem;
-    }
-
-    /* ---------- live progress ---------- */
-    .progress {
-      margin-top: 22px;
-    }
-
-    .prog-head {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-end;
-      gap: 12px;
-      flex-wrap: wrap;
-    }
-
-    .prog-title {
-      font-weight: 600;
-      font-size: 1.05rem;
-      word-break: break-all;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .prog-title.failed {
-      color: var(--fail);
-    }
-
-    .prog-count {
-      color: var(--muted);
-      font-weight: 600;
-      white-space: nowrap;
-    }
-
-    .flow {
-      color: var(--muted);
-      font-size: .85rem;
-      margin-top: 4px;
-    }
-
-    .pbar {
-      height: 10px;
-      border-radius: 99px;
-      background: #edf0f5;
-      margin: 12px 0 16px;
-      overflow: hidden;
-    }
-
-    .pbar span {
-      display: block;
-      height: 100%;
-      width: 0;
-      background: var(--primary);
-      border-radius: 99px;
-      transition: width .4s;
-    }
-
-    .pbar.done span {
-      background: var(--good);
-    }
-
-    .table-wrap {
-      max-height: 460px;
-      overflow: auto;
-      border: 1px solid var(--border);
-      border-radius: 10px;
-    }
-
-    table.steps {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: .86rem;
-    }
-
-    table.steps th {
-      position: sticky;
-      top: 0;
-      z-index: 1;
-      background: #f7f8fb;
-      text-align: left;
-      font-weight: 600;
-      color: var(--muted);
-      padding: 9px 10px;
-      border-bottom: 1px solid var(--border);
-      white-space: nowrap;
-    }
-
-    table.steps td {
-      padding: 8px 10px;
-      border-bottom: 1px solid var(--border);
-      white-space: nowrap;
-    }
-
-    table.steps tr:last-child td {
-      border-bottom: 0;
-    }
-
-    table.steps td.num {
-      color: var(--muted);
-      width: 1%;
-    }
-
-    table.steps td.nm {
-      white-space: normal;
-      word-break: break-all;
-      min-width: 160px;
-      font-weight: 500;
-    }
-
-    table.steps tr.processing {
-      background: var(--primary-soft);
-    }
-
-    .st {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .st.pending {
-      color: #adb5bd;
-    }
-
-    .st.running {
-      color: var(--primary);
-      font-weight: 600;
-    }
-
-    .st.done {
-      color: var(--good);
-    }
-
-    .st.done.hit {
-      color: var(--blur);
-      font-weight: 600;
-    }
-
-    .st.fixed {
-      color: var(--fixed);
-      font-weight: 600;
-    }
-
-    .st.skipped {
-      color: var(--muted);
-    }
-
-    .st.error {
-      color: var(--fail);
-      white-space: normal;
-    }
-
-    .secs {
-      color: var(--muted);
-      font-size: .8rem;
-      margin-left: 6px;
-    }
-
-    .spin-sm {
-      width: 12px;
-      height: 12px;
-      border: 2px solid #c5d0fa;
-      border-top-color: var(--primary);
-      border-radius: 50%;
-      display: inline-block;
-      flex: none;
-      animation: spin .8s linear infinite;
-    }
-
-    /* ---------- summary ---------- */
-    .stats {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-      gap: 14px;
-      margin: 26px 0 8px;
-    }
-
-    .stat {
-      background: var(--card);
-      border-radius: 12px;
-      padding: 16px 18px;
-      border: 1px solid var(--border);
-    }
-
-    .stat .num {
-      font-size: 1.9rem;
-      font-weight: 700;
-      line-height: 1.1;
-    }
-
-    .stat .cap {
-      color: var(--muted);
-      font-size: .88rem;
-      margin-top: 2px;
-    }
-
-    .stat.shadow .num {
-      color: var(--shadow);
-    }
-
-    .stat.blur .num {
-      color: var(--blur);
-    }
-
-    .stat.good .num {
-      color: var(--good);
-    }
-
-    .stat.fixed .num {
-      color: var(--fixed);
-    }
-
-    .stat.upscale .num {
-      color: var(--upscale);
-    }
-
-    .stat.dewarp .num {
-      color: var(--dewarp);
-    }
-
-    .stat.tear .num {
-      color: var(--tear);
-    }
-
-    .stat.err .num {
-      color: var(--err);
-    }
-
-    .timing {
-      color: var(--muted);
-      font-size: .85rem;
-      margin: 6px 2px 18px;
-    }
-
-    .downloads {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      gap: 12px;
-      margin: 4px 0 18px;
-    }
-
-    .downloads a.btn {
-      text-decoration: none;
-    }
-
-    .downloads .saved {
-      color: var(--muted);
-      font-size: .85rem;
-      word-break: break-all;
-    }
-
-    .filters {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-      margin-bottom: 16px;
-    }
-
-    .chip {
-      padding: 7px 14px;
-      border-radius: 999px;
-      border: 1px solid var(--border);
-      background: var(--card);
-      cursor: pointer;
-      font-size: .9rem;
-      color: var(--text);
-    }
-
-    .chip.active {
-      background: var(--text);
-      color: #fff;
-      border-color: var(--text);
-    }
-
-    /* ---------- result cards ---------- */
-    .card {
-      background: var(--card);
-      border-radius: var(--radius);
-      border: 1px solid var(--border);
-      padding: 20px;
-      margin-bottom: 18px;
-      box-shadow: 0 2px 10px rgba(30, 40, 80, .04);
-    }
-
-    .card-head {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      gap: 12px;
-      flex-wrap: wrap;
-    }
-
-    .fname {
-      font-weight: 600;
-      font-size: 1.05rem;
-      word-break: break-all;
-    }
-
-    .dim {
-      color: var(--muted);
-      font-size: .85rem;
-      margin-top: 2px;
-    }
-
-    .badges {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
-
-    .badge {
-      font-weight: 700;
-      font-size: .8rem;
-      letter-spacing: .03em;
-      padding: 6px 12px;
-      border-radius: 999px;
-    }
-
-    .badge.shadow {
-      background: var(--shadow-soft);
-      color: var(--shadow);
-    }
-
-    .badge.blur {
-      background: var(--blur-soft);
-      color: var(--blur);
-    }
-
-    .badge.good {
-      background: var(--good-soft);
-      color: var(--good);
-    }
-
-    .badge.upscale {
-      background: var(--upscale-soft);
-      color: var(--upscale);
-    }
-
-    .badge.dewarp {
-      background: var(--dewarp-soft);
-      color: var(--dewarp);
-    }
-
-    .badge.tear {
-      background: var(--tear-soft);
-      color: var(--tear);
-    }
-
-    .badge.err {
-      background: var(--err-soft);
-      color: var(--err);
-    }
-
-    .metrics {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-      gap: 14px;
-      margin: 16px 0;
-    }
-
-    .metric {
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 12px 14px;
-    }
-
-    .metric .row {
-      display: flex;
-      justify-content: space-between;
-      align-items: baseline;
-      gap: 8px;
-    }
-
-    .metric .title {
-      font-weight: 600;
-    }
-
-    .metric .verdict {
-      font-weight: 700;
-      font-size: .85rem;
-    }
-
-    .metric.hit .verdict {
-      color: var(--c);
-    }
-
-    .metric.miss .verdict {
-      color: var(--good);
-    }
-
-    .bar {
-      position: relative;
-      height: 8px;
-      border-radius: 99px;
-      background: #edf0f5;
-      margin: 10px 0 6px;
-      overflow: visible;
-    }
-
-    .bar span {
-      position: absolute;
-      inset: 0 auto 0 0;
-      border-radius: 99px;
-      background: var(--c);
-    }
-
-    .bar i {
-      position: absolute;
-      top: -4px;
-      bottom: -4px;
-      width: 2px;
-      background: var(--text);
-      opacity: .45;
-    }
-
-    .metric .sub {
-      color: var(--muted);
-      font-size: .82rem;
-    }
-
-    .metric.shadow {
-      --c: var(--shadow);
-    }
-
-    .metric.blur {
-      --c: var(--blur);
-    }
-
-    .metric.dewarp {
-      --c: var(--dewarp);
-    }
-
-    .metric.tear {
-      --c: var(--tear);
-    }
-
-    .imgs {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-      gap: 14px;
-    }
-
-    figure {
-      margin: 0;
-    }
-
-    figure img {
-      width: 100%;
-      border-radius: 10px;
-      border: 1px solid var(--border);
-      display: block;
-      cursor: zoom-in;
-      background: #fafafa;
-    }
-
-    figcaption {
-      color: var(--muted);
-      font-size: .84rem;
-      margin-top: 6px;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      flex-wrap: wrap;
-    }
-
-    figcaption a {
-      color: var(--fixed);
-      font-weight: 600;
-    }
-
-    .dot {
-      width: 10px;
-      height: 10px;
-      border-radius: 3px;
-      display: inline-block;
-      flex: none;
-    }
-
-    .empty {
-      text-align: center;
-      color: var(--muted);
-      padding: 40px 0;
-    }
-
-    /* ---------- lightbox & loading ---------- */
-    .overlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(15, 20, 35, .85);
-      display: grid;
-      place-items: center;
-      z-index: 50;
-      padding: 24px;
-    }
-
-    .overlay[hidden] {
-      display: none;
-    }
-
-    .overlay img {
-      max-width: 100%;
-      max-height: 100%;
-      border-radius: 8px;
-      cursor: zoom-out;
-    }
-
-    .loading {
-      color: #fff;
-      text-align: center;
-    }
-
-    .spinner {
-      width: 46px;
-      height: 46px;
-      border: 4px solid rgba(255, 255, 255, .25);
-      border-top-color: #fff;
-      border-radius: 50%;
-      margin: 0 auto 14px;
-      animation: spin .8s linear infinite;
-    }
-
-    @keyframes spin {
-      to {
-        transform: rotate(360deg);
-      }
-    }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+           background: var(--bg); color: var(--text); }
+
+    /* header */
+    .topbar { background: linear-gradient(120deg, #2f4ac0, #5c7cfa); color: #fff; }
+    .topbar .inner { max-width: 1180px; margin: 0 auto; padding: 26px 20px 80px; position: relative; }
+    .topbar h1 { margin: 0; font-size: 1.7rem; font-weight: 700; display: flex; align-items: center; gap: 10px; }
+    .topbar p { margin: 6px 0 0; opacity: .85; }
+    .api-link { position: absolute; top: 28px; right: 20px; color: #fff; opacity: .85;
+                text-decoration: none; font-size: .9rem; font-weight: 600; }
+    .api-link:hover { opacity: 1; text-decoration: underline; }
+
+    main { max-width: 1180px; margin: -58px auto 0; padding: 0 20px 60px; }
+    .panels { display: grid; grid-template-columns: repeat(auto-fit, minmax(330px, 1fr)); gap: 18px; }
+    .panel { background: var(--card); border-radius: var(--radius); padding: 22px;
+             box-shadow: 0 8px 30px rgba(30, 40, 80, .08); }
+    .panel h2 { margin: 0 0 4px; font-size: 1.1rem; }
+    .panel .sub { color: var(--muted); font-size: .88rem; margin-bottom: 14px; }
+
+    .drop { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+            min-height: 132px; padding: 18px; border: 2px dashed #c5cde0; border-radius: 12px;
+            background: #fafbfe; cursor: pointer; text-align: center; transition: .15s; }
+    .drop:hover, .drop.over { border-color: var(--primary); background: var(--primary-soft); }
+    .drop input { display: none; }
+    .drop strong { font-size: 1rem; }
+    .drop .hint { color: var(--muted); font-size: .84rem; }
+
+    .btn { padding: 11px 22px; font-size: .97rem; font-weight: 600; border: 0; border-radius: 10px;
+           background: var(--primary); color: #fff; cursor: pointer; transition: .15s; text-decoration: none;
+           display: inline-block; }
+    .btn:hover { background: var(--primary-dark); }
+    .btn:disabled { background: #a5b4f3; cursor: default; }
+    .row { display: flex; gap: 10px; align-items: center; margin-top: 14px; flex-wrap: wrap; }
+    input[type=text] { padding: 10px 12px; border: 1px solid var(--border); border-radius: 10px;
+                       font: inherit; flex: 1; min-width: 160px; }
+    .note { color: var(--muted); font-size: .85rem; margin-top: 10px; word-break: break-all; }
+    .note.err { color: var(--fail); }
+
+    /* batch progress */
+    .batch { margin-top: 18px; }
+    .batch-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; flex-wrap: wrap; }
+    .batch-id { font-weight: 700; font-size: 1.05rem; }
+    .counts { display: flex; gap: 14px; flex-wrap: wrap; color: var(--muted); font-size: .88rem; margin-top: 6px; }
+    .counts b { color: var(--text); }
+    .pbar { height: 10px; border-radius: 99px; background: #edf0f5; margin: 12px 0 14px; overflow: hidden; }
+    .pbar span { display: block; height: 100%; width: 0; background: var(--primary); transition: width .4s; }
+    .pbar.done span { background: var(--good); }
+
+    .table-wrap { max-height: 420px; overflow: auto; border: 1px solid var(--border); border-radius: 10px; }
+    table { width: 100%; border-collapse: collapse; font-size: .87rem; }
+    th { position: sticky; top: 0; background: #f7f8fb; text-align: left; font-weight: 600; color: var(--muted);
+         padding: 9px 12px; border-bottom: 1px solid var(--border); }
+    td { padding: 8px 12px; border-bottom: 1px solid var(--border); }
+    tr:last-child td { border-bottom: 0; }
+    td.file { word-break: break-all; }
+    .tag { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: .78rem; font-weight: 700; }
+    .PENDING { background: var(--muted-soft); color: var(--muted); }
+    .PROCESSING { background: var(--primary-soft); color: var(--primary-dark); }
+    .COMPLETED { background: var(--good-soft); color: var(--good); }
+    .FAILED { background: var(--fail-soft); color: var(--fail); }
+    .PARTIALLY_COMPLETED { background: var(--warn-soft); color: var(--warn); }
+    .spin { width: 13px; height: 13px; border: 2px solid #c5d0fa; border-top-color: var(--primary);
+            border-radius: 50%; display: inline-block; vertical-align: -2px; animation: spin .8s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .batch-list { margin-top: 18px; }
+    .batch-list .item { display: flex; justify-content: space-between; align-items: center; gap: 10px;
+                        padding: 10px 12px; border: 1px solid var(--border); border-radius: 10px;
+                        margin-bottom: 8px; cursor: pointer; background: var(--card); }
+    .batch-list .item:hover { border-color: var(--primary); background: var(--primary-soft); }
+    .batch-list .item .who { font-weight: 600; }
+    .batch-list .item .meta { color: var(--muted); font-size: .84rem; }
+    .thumbs { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+    .thumbs img { width: 56px; height: 56px; object-fit: cover; border-radius: 8px; border: 1px solid var(--border); }
   </style>
 </head>
 
 <body>
   <header class="topbar">
     <div class="inner">
-      <h1><a href="/">
-          <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-            stroke-linecap="round" stroke-linejoin="round">
-            <rect x="3" y="3" width="18" height="18" rx="3" />
-            <circle cx="9" cy="9" r="2" />
-            <path d="m21 15-5-5L5 21" />
-          </svg>
-          Image Restorer
-        </a></h1>
-      <p>Upload images or a folder to check them for Restoration
-      <p>
+      <h1>
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="3" width="18" height="18" rx="3" />
+          <circle cx="9" cy="9" r="2" />
+          <path d="m21 15-5-5L5 21" />
+        </svg>
+        Image Restorer
+      </h1>
+      <p>Every image is checked for <b>warping</b>, <b>shadows</b>, <b>blur</b>, <b>low resolution</b> and
+        <b>tears</b> &mdash; and only what is found gets corrected.</p>
+      <a class="api-link" href="/docs" target="_blank" rel="noopener">API &amp; docs &rarr;</a>
     </div>
   </header>
 
   <main>
-    <form class="panel" id="form">
-      <label class="drop" id="drop">
-        <input type="file" id="files" accept="image/*,{{ exts_list|join(',') }}" multiple>
-        <div class="icon">
-          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-            stroke-linecap="round" stroke-linejoin="round">
-            <path d="M12 16V4" />
-            <path d="m6 10 6-6 6 6" />
-            <path d="M4 20h16" />
-          </svg>
-        </div>
-        <strong id="dropTitle">Click to choose images or drag &amp; drop them here</strong>
-        <span class="hint">You can select several images at once &middot; {{ exts }}</span>
-      </label>
-      <div class="or">or
-        <label class="btn-outline">
-          <input type="file" id="folder" webkitdirectory multiple hidden>
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-            stroke-linecap="round" stroke-linejoin="round">
-            <path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-          </svg>
-          Choose a folder
+    <div class="panels">
+      <!-- ─── single image ─────────────────────────────────────────────── -->
+      <section class="panel">
+        <h2>Single image</h2>
+        <div class="sub">Restores one image and downloads the result.</div>
+        <label class="drop" id="oneDrop">
+          <input type="file" id="oneFile" accept="image/*,{{ exts_list|join(',') }}">
+          <strong id="oneTitle">Click to choose an image</strong>
+          <span class="hint">{{ exts }}</span>
         </label>
-      </div>
-      <div class="thumbs" id="thumbs"></div>
-
-      <div class="controls">
-        <div class="checks">
-          <span class="lbl">Checks:</span>
-          <label class="toggle"
-            title="Upscale {{ esrgan_scale }}x with Real-ESRGAN (once) when the width or height is below {{ upscale_below_px }} px"><input
-              type="checkbox" name="checks" value="upscale" {{ 'checked' if 'upscale' in checks }}> Upscale (&lt; {{
-            upscale_below_px }} px)</label>
-          <label class="toggle"><input type="checkbox" name="checks" value="blur" {{ 'checked' if 'blur' in checks }}>
-            Blur</label>
-          <label class="toggle"><input type="checkbox" name="checks" value="shadow" {{ 'checked' if 'shadow' in checks
-              }}> Shadow</label>
-          <label class="toggle"
-            title="Detect page warping with UVDoc (score &ge; {{ dewarp_threshold }}) and dewrap"><input type="checkbox"
-              name="checks" value="dewrap" {{ 'checked' if 'dewrap' in checks }}> Dewrap</label>
-          <label class="toggle"
-            title="Find tears / missing paper (needs a dark background behind the page) and fill them with LaMa"><input
-              type="checkbox" name="checks" value="inpaint" {{ 'checked' if 'inpaint' in checks }}> Inpaint
-            tears</label>
-          <label class="toggle"
-            title="Final DocRes appearance enhancement (lighting, background and colour) - applied to every image"><input
-              type="checkbox" name="checks" value="appearance" {{ 'checked' if 'appearance' in checks }}> Enhance
-            (all)</label>
+        <div class="row">
+          <button class="btn" id="oneGo" disabled>Restore &amp; download</button>
         </div>
-        <button type="submit" class="btn" id="submit">Process images</button>
-      </div>
-    </form>
+        <div class="note" id="oneNote"></div>
+        <div class="thumbs" id="oneThumb"></div>
+      </section>
 
-    {% if job %}
-    <section class="panel progress" id="progress">
-      <div class="prog-head">
+      <!-- ─── batch folder ─────────────────────────────────────────────── -->
+      <section class="panel">
+        <h2>Batch: a folder of images</h2>
+        <div class="sub">Every image in the folder, sub-folders included, processed one by one.</div>
+        <label class="drop" id="folderDrop">
+          <input type="file" id="folderFiles" webkitdirectory multiple>
+          <strong id="folderTitle">Click to choose a folder</strong>
+          <span class="hint">Other files (.txt, .pdf, &hellip;) are ignored</span>
+        </label>
+        <div class="row">
+          <input type="text" id="batchName" placeholder="Batch name (optional)">
+          <button class="btn" id="batchGo" disabled>Create batch</button>
+        </div>
+        <div class="note" id="batchNote"></div>
+      </section>
+    </div>
+
+    <!-- ─── the batch being watched ────────────────────────────────────── -->
+    <section class="panel batch" id="batchPanel" hidden>
+      <div class="batch-head">
         <div>
-          <div class="prog-title" id="progTitle">Loading…</div>
-          <div class="flow">Each image: {{ stages|map('last')|join(' → ') }}. Removal steps only run when the problem is
-            found.</div>
+          <div class="batch-id"><span id="bId"></span> <span class="tag" id="bStatus"></span></div>
+          <div class="sub" id="bName" style="margin:2px 0 0"></div>
+          <div class="counts" id="bCounts"></div>
         </div>
-        <div class="prog-count" id="progCount"></div>
+        <div>
+          <a class="btn" id="bDownload" hidden>Download output</a>
+        </div>
       </div>
-      <div class="pbar" id="pbar"><span id="pbarFill"></span></div>
-      <div class="table-wrap" id="tableWrap">
-        <table class="steps">
+      <div class="pbar" id="bBar"><span></span></div>
+      <div class="table-wrap">
+        <table>
           <thead>
-            <tr>
-              <th>#</th>
-              <th>Image</th>{% for key, label in stages %}<th>{{ label }}</th>{% endfor %}<th>Result</th>
-            </tr>
+            <tr><th style="width:1%">#</th><th>Filename</th><th style="width:150px">Status</th><th>Details</th></tr>
           </thead>
-          <tbody id="progRows"></tbody>
+          <tbody id="bRows"></tbody>
         </table>
       </div>
     </section>
-    {% endif %}
 
-    {% if results %}
-    <section class="stats">
-      <div class="stat">
-        <div class="num">{{ summary.total }}</div>
-        <div class="cap">Images checked</div>
-      </div>
-      {% if 'upscale' in checks %}<div class="stat upscale">
-        <div class="num">{{ summary.upscaled }}</div>
-        <div class="cap">Upscaled (low resolution)</div>
-      </div>{% endif %}
-      {% if 'blur' in checks %}<div class="stat blur">
-        <div class="num">{{ summary.blur }}</div>
-        <div class="cap">Blurred</div>
-      </div>{% endif %}
-      {% if 'shadow' in checks %}<div class="stat shadow">
-        <div class="num">{{ summary.shadow }}</div>
-        <div class="cap">With shadow</div>
-      </div>{% endif %}
-      {% if 'dewrap' in checks %}<div class="stat dewarp">
-        <div class="num">{{ summary.dewrap }}</div>
-        <div class="cap">Warped (dewarped)</div>
-      </div>{% endif %}
-      {% if 'inpaint' in checks %}<div class="stat tear">
-        <div class="num">{{ summary.tear }}</div>
-        <div class="cap">Torn (inpainted)</div>
-      </div>{% endif %}
-      {% if 'appearance' in checks %}<div class="stat fixed">
-        <div class="num">{{ summary.enhanced }}</div>
-        <div class="cap">Enhanced (all)</div>
-      </div>{% endif %}
-      <div class="stat fixed">
-        <div class="num">{{ summary.corrected }}</div>
-        <div class="cap">Corrected</div>
-      </div>
-      <div class="stat good">
-        <div class="num">{{ summary.good }}</div>
-        <div class="cap">Good quality</div>
-      </div>
-      {% if summary.errors %}<div class="stat err">
-        <div class="num">{{ summary.errors }}</div>
-        <div class="cap">Errors</div>
-      </div>{% endif %}
+    <!-- ─── recent batches ─────────────────────────────────────────────── -->
+    <section class="panel batch-list" id="listPanel" hidden>
+      <h2>Recent batches</h2>
+      <div class="sub">Click one to see its images.</div>
+      <div id="bList"></div>
     </section>
-    {% if elapsed is not none %}<div class="timing">Processed in {{ '%.1f'|format(elapsed) }} s</div>{% endif %}
-    {% if run %}
-    <div class="downloads">
-      <a class="btn" href="{{ run.zip }}">Download {{ 'restored folder' if run.folder else 'restored images' }}
-        (ZIP)</a>
-      <a class="btn-outline" href="{{ run.csv }}">Download report (CSV)</a>
-      <span class="saved">Also saved on the server in {{ run.dir }}</span>
-    </div>
-    {% endif %}
-
-    <div class="filters" id="filters">
-      <button type="button" class="chip active" data-filter="all">All ({{ summary.total }})</button>
-      {% if 'upscale' in checks %}<button type="button" class="chip" data-filter="upscale">Upscaled ({{ summary.upscaled
-        }})</button>{% endif %}
-      {% if 'blur' in checks %}<button type="button" class="chip" data-filter="blur">Blurred ({{ summary.blur
-        }})</button>{% endif %}
-      {% if 'shadow' in checks %}<button type="button" class="chip" data-filter="shadow">Shadow ({{ summary.shadow
-        }})</button>{% endif %}
-      {% if 'dewrap' in checks %}<button type="button" class="chip" data-filter="dewrap">Warped ({{ summary.dewrap }})</button>{% endif %}
-      {% if 'inpaint' in checks %}<button type="button" class="chip" data-filter="tear">Torn ({{ summary.tear
-        }})</button>{% endif %}
-      <button type="button" class="chip" data-filter="good">Good ({{ summary.good }})</button>
-      {% if summary.errors %}<button type="button" class="chip" data-filter="error">Errors ({{ summary.errors
-        }})</button>{% endif %}
-    </div>
-
-    <section id="results">
-      {% for r in results %}
-      {% if r.error %}
-      <article class="card" data-tags="error">
-        <div class="card-head">
-          <div>
-            <div class="fname">{{ r.name }}</div>
-            <div class="dim">{{ r.error }}</div>
-          </div>
-          <div class="badges"><span class="badge err">ERROR</span></div>
-        </div>
-      </article>
-      {% else %}
-      <article class="card" data-tags="{{ r.issues|join(' ') if r.issues else 'good' }}">
-        <div class="card-head">
-          <div>
-            <div class="fname">{{ r.name }}</div>
-            <div class="dim">{{ r.width }} &times; {{ r.height }} px
-              {% if r.upscaled_to %}&rarr; upscaled to {{ r.upscaled_to[0] }} &times; {{ r.upscaled_to[1] }} px
-              {% if r.still_below %}(still below {{ upscale_below_px }} px &mdash; Real-ESRGAN applied once only){%
-              endif %}{% endif %}</div>
-          </div>
-          <div class="badges">
-            {% if 'upscale' in r.issues %}<span class="badge upscale">LOW RES &middot; UPSCALED {{ esrgan_scale
-              }}&times;</span>{% endif %}
-            {% if 'blur' in r.issues %}<span class="badge blur">BLURRED</span>{% endif %}
-            {% if 'shadow' in r.issues %}<span class="badge shadow">SHADOW DETECTED</span>{% endif %}
-            {% if 'dewarp' in r.issues %}<span class="badge dewarp">WARPED &middot; DEWARPED</span>{% endif %}
-            {% if 'tear' in r.issues %}<span class="badge tear">TORN &middot; INPAINTED</span>{% endif %}
-            {% if not r.issues %}<span class="badge good">GOOD QUALITY</span>{% endif %}
-          </div>
-        </div>
-
-        <div class="metrics">
-          {% if r.dewarp %}
-          <div class="metric dewarp {{ 'hit' if r.dewarp.detected else 'miss' }}">
-            <div class="row"><span class="title">Warping</span>
-              <span class="verdict">{{ 'Warped' if r.dewarp.detected else 'Flat' }}</span>
-            </div>
-            <div class="bar"><span style="width: {{ [r.dewarp.score / dewarp_threshold * 50, 100]|min }}%"></span>
-              <i style="left: 50%" title="threshold"></i>
-            </div>
-            <div class="sub">Deformation score {{ '%.4f'|format(r.dewarp.score) }} &middot; threshold {{
-              dewarp_threshold }}</div>
-          </div>
-          {% endif %}
-          {% if r.shadow %}
-          <div class="metric shadow {{ 'hit' if r.shadow.detected else 'miss' }}">
-            <div class="row"><span class="title">Shadow</span>
-              <span class="verdict">{{ 'Shadow present' if r.shadow.detected else 'No shadow' }}</span>
-            </div>
-            <div class="bar"><span style="width: {{ '%.1f'|format(r.shadow.prob * 100) }}%"></span>
-              <i style="left: {{ shadow_threshold * 100 }}%" title="threshold"></i>
-            </div>
-            <div class="sub">Probability {{ '%.3f'|format(r.shadow.prob) }} &middot; confidence {{
-              '%.1f'|format(r.shadow.confidence * 100) }}%
-              {% if 'Dewarped' in r.steps %}&middot; checked after dewarping{% endif %}</div>
-          </div>
-          {% endif %}
-          {% if r.blur %}
-          {% if r.blur.error %}
-          <div class="metric blur">
-            <div class="row"><span class="title">Blur</span><span class="verdict">Error</span></div>
-            <div class="sub">{{ r.blur.error }}</div>
-          </div>
-          {% else %}
-          <div class="metric blur {{ 'hit' if r.blur.detected else 'miss' }}">
-            <div class="row"><span class="title">Blur</span>
-              <span class="verdict">{{ 'Blurred' if r.blur.detected else 'Sharp' }}</span>
-            </div>
-            <div class="bar"><span style="width: {{ '%.1f'|format(r.blur.prob * 100) }}%"></span>
-              <i style="left: {{ blur_threshold * 100 }}%" title="threshold"></i>
-            </div>
-            <div class="sub">Probability {{ '%.3f'|format(r.blur.prob) }} &middot; confidence {{
-              '%.1f'|format(r.blur.confidence * 100) }}%
-              &middot; {{ r.blur.blurred_tiles }}/{{ r.blur.tiles }} regions blurred
-              {% set before = [] %}{% if 'Dewarped' in r.steps %}{% set _ = before.append('dewarping') %}{% endif %}{%
-              if 'Shadow removed' in r.steps %}{% set _ = before.append('shadow removal') %}{% endif %}
-              {% if before %}&middot; checked after {{ before|join(' and ') }}{% endif %}</div>
-          </div>
-          {% endif %}
-          {% endif %}
-          {% if r.tear %}
-          <div class="metric tear {{ 'hit' if r.tear.detected else 'miss' }}">
-            <div class="row"><span class="title">Tears / missing paper</span>
-              <span class="verdict">{{ 'Damage found' if r.tear.detected else 'No damage' }}</span>
-            </div>
-            {% if not r.tear.note %}
-            <div class="bar"><span style="width: {{ [r.tear.damaged * 100 * 10, 100]|min }}%"></span>
-              <i style="left: 1%" title="threshold 0.10%"></i>
-            </div>
-            {% endif %}
-            <div class="sub">{% if r.tear.note %}Not checked: {{ r.tear.note }}{% else %}Damaged area
-              {{ '%.2f'|format(r.tear.damaged * 100) }}% of image &middot; threshold 0.10%{% endif %}</div>
-          </div>
-          {% endif %}
-        </div>
-
-        <div class="imgs">
-          <figure>
-            <img src="{{ r.original }}" alt="{{ r.name }}" loading="lazy">
-            <figcaption>Original{% if not r.steps %} &middot; <a href="{{ r.download }}">Download</a>{% endif %}
-            </figcaption>
-          </figure>
-          {% if r.final %}
-          <figure>
-            <img src="{{ r.final }}" alt="Corrected {{ r.name }}" loading="lazy">
-            <figcaption><span class="dot" style="background: var(--fixed)"></span>
-              Final output &mdash; {{ r.steps|join(', then ') }}
-              &middot; <a href="{{ r.download }}">Download full size</a></figcaption>
-          </figure>
-          {% endif %}
-        </div>
-      </article>
-      {% endif %}
-      {% endfor %}
-      <div class="empty" id="empty" hidden>No images in this category.</div>
-    </section>
-    {% endif %}
   </main>
-
-  <div class="overlay" id="lightbox" hidden><img alt=""></div>
-  <div class="overlay" id="loading" hidden>
-    <div class="loading">
-      <div class="spinner"></div>
-      <div id="loadingText">Uploading…</div>
-    </div>
-  </div>
 
   <script>
     (() => {
-      const EXTS = {{ exts_list| tojson
-    }};
-    const isImage = f => EXTS.includes(f.name.slice(f.name.lastIndexOf('.')).toLowerCase());
-    const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+      const $ = id => document.getElementById(id);
+      const EXTS = {{ exts_list|tojson }};
+      const isImage = f => EXTS.includes(f.name.slice(f.name.lastIndexOf('.')).toLowerCase());
+      const esc = s => String(s ?? '').replace(/[&<>"]/g, c =>
+        ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
-    // ---------------- choosing images / a folder ----------------
-    const form = document.getElementById('form');
-    const drop = document.getElementById('drop');
-    const input = document.getElementById('files');
-    const folder = document.getElementById('folder');
-    const thumbs = document.getElementById('thumbs');
-    const title = document.getElementById('dropTitle');
-    const defaultTitle = title.textContent;
-    let picked = [];  // the images to upload
-
-    const BROWSER_EXTS = ['.jpg', '.jpeg', '.png', '.bmp', '.webp', '.gif'];  // shown by the browser itself
-    function serverThumb(img, f) {
-      img.onerror = null;
-      const fd = new FormData();
-      fd.append('image', f, f.name);
-      fetch('/thumb', { method: 'POST', body: fd })
-        .then(r => r.ok ? r.blob() : Promise.reject(r.status))
-        .then(b => { img.src = URL.createObjectURL(b); })
-        .catch(() => img.remove());
-    }
-    function showPicked(text) {
-      thumbs.innerHTML = '';
-      title.textContent = text || (!picked.length ? defaultTitle
-        : picked.length === 1 ? picked[0].name : picked.length + ' images selected');
-      picked.slice(0, 14).forEach(f => {
-        const img = document.createElement('img');
-        img.title = f.webkitRelativePath || f.name;
-        const ext = f.name.slice(f.name.lastIndexOf('.')).toLowerCase();
-        if (BROWSER_EXTS.includes(ext)) {
-          img.onerror = () => serverThumb(img, f);  // browser could not show it after all
-          img.src = URL.createObjectURL(f);
-        } else {
-          serverThumb(img, f);  // TIFF, JPEG 2000: the server makes a JPEG preview
+      // ── single image → POST /api/v1/images ────────────────────────────
+      let oneImage = null;
+      $('oneFile').addEventListener('change', () => {
+        oneImage = $('oneFile').files[0] || null;
+        $('oneTitle').textContent = oneImage ? oneImage.name : 'Click to choose an image';
+        $('oneGo').disabled = !oneImage;
+        $('oneNote').textContent = '';
+        $('oneThumb').innerHTML = '';
+        if (oneImage) {
+          const img = document.createElement('img');
+          img.src = URL.createObjectURL(oneImage);
+          img.onerror = () => img.remove();          // TIFF / JPEG 2000 cannot be shown by the browser
+          $('oneThumb').appendChild(img);
         }
-        thumbs.appendChild(img);
       });
-      if (picked.length > 14) {
-        const more = document.createElement('div');
-        more.className = 'more';
-        more.textContent = '+' + (picked.length - 14);
-        thumbs.appendChild(more);
-      }
-    }
-    input.addEventListener('change', () => { picked = [...input.files]; folder.value = ''; showPicked(); });
-    folder.addEventListener('change', () => {
-      const all = [...folder.files];
-      const name = all.length ? all[0].webkitRelativePath.split('/')[0] : '';
-      picked = all.filter(isImage);  // other files in the folder are not uploaded
-      input.value = '';
-      const other = all.length - picked.length;
-      showPicked(!picked.length ? `Folder "${name}" contains no images`
-        : `Folder "${name}": ${picked.length} image${picked.length === 1 ? '' : 's'}`
-        + (other ? ` (${other} other file${other === 1 ? '' : 's'} ignored)` : ''));
-    });
-    ['dragenter', 'dragover'].forEach(e => drop.addEventListener(e, ev => { ev.preventDefault(); drop.classList.add('over'); }));
-    ['dragleave', 'drop'].forEach(e => drop.addEventListener(e, ev => { ev.preventDefault(); drop.classList.remove('over'); }));
-    drop.addEventListener('drop', ev => {
-      picked = [...ev.dataTransfer.files].filter(isImage);
-      input.value = folder.value = '';
-      showPicked();
-    });
 
-    // ---------------- upload, then open the run page ----------------
-    const loading = document.getElementById('loading');
-    const loadingText = document.getElementById('loadingText');
-    const submit = document.getElementById('submit');
-    function uploadFailed(msg) {
-      alert('Upload failed: ' + msg);
-      loading.hidden = true;
-      submit.disabled = false;
-    }
-    form.addEventListener('submit', ev => {
-      ev.preventDefault();
-      if (!picked.length) { alert('Choose some images or a folder first.'); return; }
-      const checks = [...document.querySelectorAll('input[name="checks"]:checked')];
-      if (!checks.length) { alert('Select at least one check (Blur or Shadow).'); return; }
+      $('oneGo').addEventListener('click', async () => {
+        if (!oneImage) return;
+        $('oneGo').disabled = true;
+        $('oneNote').className = 'note';
+        $('oneNote').innerHTML = '<span class="spin"></span> Restoring&hellip; this can take up to a minute.';
+        try {
+          const fd = new FormData();
+          fd.append('image', oneImage, oneImage.name);
+          const resp = await fetch('/api/v1/images', { method: 'POST', body: fd });
+          if (!resp.ok) throw new Error((await resp.json().catch(() => ({}))).detail || 'HTTP ' + resp.status);
+          const blob = await resp.blob();
+          const name = (resp.headers.get('content-disposition') || '').match(/filename="?([^"]+)"?/)?.[1]
+            || 'restored';
+          const a = document.createElement('a');
+          a.href = URL.createObjectURL(blob);
+          a.download = name;
+          a.click();
+          $('oneNote').innerHTML = `Done in ${esc(resp.headers.get('x-seconds'))} s &middot; `
+            + `<b>${esc(resp.headers.get('x-corrections'))}</b> &middot; `
+            + `${esc(resp.headers.get('x-resolution'))} &middot; saved as ${esc(name)}`;
+        } catch (e) {
+          $('oneNote').className = 'note err';
+          $('oneNote').textContent = 'Failed: ' + e.message;
+        }
+        $('oneGo').disabled = false;
+      });
 
-      const fd = new FormData();
-      checks.forEach(c => fd.append('checks', c.value));
-      // Send the path inside the folder as the file name, so the output keeps the folder structure
-      picked.forEach(f => fd.append('images', f, f.webkitRelativePath || f.name));
+      // ── folder → POST /api/v1/batches ─────────────────────────────────
+      let folderFiles = [];
+      $('folderFiles').addEventListener('change', () => {
+        const all = [...$('folderFiles').files];
+        folderFiles = all.filter(isImage);
+        const top = all.length ? (all[0].webkitRelativePath || '').split('/')[0] : '';
+        const other = all.length - folderFiles.length;
+        $('folderTitle').textContent = folderFiles.length
+          ? `${top || 'Folder'}: ${folderFiles.length} image${folderFiles.length === 1 ? '' : 's'}`
+            + (other ? ` (${other} other file${other === 1 ? '' : 's'} ignored)` : '')
+          : (all.length ? `${top}: no images found` : 'Click to choose a folder');
+        if (top && !$('batchName').value) $('batchName').value = top;
+        $('batchGo').disabled = !folderFiles.length;
+        $('batchNote').textContent = '';
+      });
 
-      const n = picked.length + ' image' + (picked.length === 1 ? '' : 's');
-      loadingText.textContent = `Uploading ${n}…`;
-      loading.hidden = false;
-      submit.disabled = true;
-      const xhr = new XMLHttpRequest();
-      xhr.open('POST', '/start');
-      xhr.upload.onprogress = e => {
-        if (e.lengthComputable) loadingText.textContent = `Uploading ${n}… ${Math.round(100 * e.loaded / e.total)}%`;
-      };
-      xhr.onload = () => {
-        let data = null;
-        try { data = JSON.parse(xhr.responseText); } catch (e) { /* not JSON, e.g. "upload too large" */ }
-        if (xhr.status === 200 && data && data.url) { location.href = data.url; return; }
-        uploadFailed((data && data.error) || xhr.responseText || 'HTTP ' + xhr.status);
-      };
-      xhr.onerror = () => uploadFailed('network error');
-      xhr.send(fd);
-    });
-    window.addEventListener('pageshow', () => { loading.hidden = true; submit.disabled = false; });
+      $('batchGo').addEventListener('click', () => {
+        if (!folderFiles.length) return;
+        const fd = new FormData();
+        folderFiles.forEach(f => fd.append('files', f, f.webkitRelativePath || f.name));
+        if ($('batchName').value.trim()) fd.append('batch_name', $('batchName').value.trim());
 
-    // ---------------- live progress of a run ----------------
-    const STATUS = {{ status| tojson if status else 'null' }};
-    const STAGE_KEYS = {{ stage_keys| tojson }};
-    const STAGE_WORD = { pending: 'Waiting', running: 'Running…', done: 'Done', skipped: 'Skipped', error: 'Failed' };
-    const STAGE_ICON = { pending: '○', done: '✓', skipped: '–', error: '✕' };
-
-    function stageCell(s) {
-      const icon = s.state === 'running' ? '<i class="spin-sm"></i>' : STAGE_ICON[s.state];
-      return `<td><span class="st ${s.state}${s.hit ? ' hit' : ''}">${icon} ${esc(s.text || STAGE_WORD[s.state])}</span></td>`;
-    }
-    function resultCell(it) {
-      if (it.state === 'waiting') return '<td><span class="st pending">Waiting</span></td>';
-      if (it.state === 'processing') return '<td><span class="st running"><i class="spin-sm"></i> Processing…</span></td>';
-      if (it.state === 'error') return `<td><span class="st error">✕ ${esc(it.error)}</span></td>`;
-      const fixed = it.outcome !== 'No problems';
-      return `<td><span class="st done${fixed ? ' fixed' : ''}">✓ ${esc(fixed ? it.outcome : 'No problems (copied)')}</span>`
-        + `<span class="secs">${it.seconds} s</span></td>`;
-    }
-    const fmtTime = s => s < 60 ? `${Math.round(s)} s` : `${Math.floor(s / 60)} min ${Math.round(s % 60)} s`;
-
-    let lastCurrent = null;
-    function renderStatus(s) {
-      document.getElementById('progRows').innerHTML = s.items.map((it, i) =>
-        `<tr class="${it.state}"><td class="num">${i + 1}</td><td class="nm">${esc(it.name)}</td>`
-        + STAGE_KEYS.map(k => stageCell(it.stages[k])).join('') + resultCell(it) + '</tr>').join('');
-      document.getElementById('pbarFill').style.width = (s.total ? 100 * s.done / s.total : 0) + '%';
-      document.getElementById('pbar').classList.toggle('done', s.state === 'done');
-      document.getElementById('progCount').textContent = `${s.done} / ${s.total} images · ${fmtTime(s.elapsed)}`;
-
-      const title = document.getElementById('progTitle');
-      const cur = s.items.findIndex(it => it.state === 'processing');
-      title.classList.toggle('failed', s.state === 'failed');
-      title.innerHTML = s.state === 'queued' ? '<i class="spin-sm"></i> Waiting for another run to finish…'
-        : s.state === 'running' ? `<i class="spin-sm"></i> Processing ${cur >= 0 ? esc(s.items[cur].name) : ''}…`
-          : s.state === 'failed' ? '✕ ' + esc(s.error)
-            : `✓ Finished in ${fmtTime(s.elapsed)}`;
-
-      // keep the image being processed visible in the table
-      if (cur >= 0 && cur !== lastCurrent) {
-        const wrap = document.getElementById('tableWrap');
-        const row = document.getElementById('progRows').children[cur];
-        wrap.scrollTop = row.offsetTop - wrap.clientHeight / 2;
-        lastCurrent = cur;
-      }
-    }
-
-    if (STATUS) {
-      renderStatus(STATUS);
-      if (STATUS.state === 'queued' || STATUS.state === 'running') {
-        const poll = async () => {
-          try {
-            const r = await fetch(`/status/${STATUS.id}`, { cache: 'no-store' });
-            if (r.ok) {
-              const s = await r.json();
-              renderStatus(s);
-              if (s.state === 'done') { location.reload(); return; }  // show the results and downloads
-              if (s.state === 'failed') return;
-            }
-          } catch (e) { /* server busy or restarting: try again */ }
-          setTimeout(poll, 1000);
+        $('batchGo').disabled = true;
+        $('batchNote').className = 'note';
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', '/api/v1/batches');
+        xhr.upload.onprogress = e => {
+          if (e.lengthComputable) {
+            $('batchNote').innerHTML = `<span class="spin"></span> Uploading ${folderFiles.length} images&hellip; `
+              + Math.round(100 * e.loaded / e.total) + '%';
+          }
         };
-        setTimeout(poll, 1000);
-      }
-    }
-
-    // ---------------- result filters ----------------
-    const chips = document.querySelectorAll('.chip');
-    chips.forEach(chip => chip.addEventListener('click', () => {
-      chips.forEach(c => c.classList.toggle('active', c === chip));
-      const f = chip.dataset.filter;
-      let shown = 0;
-      document.querySelectorAll('#results .card').forEach(card => {
-        const show = f === 'all' || card.dataset.tags.split(' ').includes(f);
-        card.hidden = !show;
-        shown += show;
+        xhr.onload = () => {
+          $('batchGo').disabled = false;
+          let data = null;
+          try { data = JSON.parse(xhr.responseText); } catch (e) { /* not JSON */ }
+          if (xhr.status !== 202 && xhr.status !== 200) {
+            $('batchNote').className = 'note err';
+            $('batchNote').textContent = 'Failed: ' + (data?.detail ? JSON.stringify(data.detail) : xhr.status);
+            return;
+          }
+          $('batchNote').innerHTML = `Batch <b>${esc(data.batch_id)}</b> created &middot; `
+            + `${data.total_images} images queued`
+            + (data.skipped_files ? ` &middot; ${data.skipped_files} other files ignored` : '');
+          watch(data.batch_id);
+          loadList();
+        };
+        xhr.onerror = () => {
+          $('batchGo').disabled = false;
+          $('batchNote').className = 'note err';
+          $('batchNote').textContent = 'Upload failed (network error)';
+        };
+        xhr.send(fd);
       });
-      document.getElementById('empty').hidden = shown > 0;
-    }));
 
-    // ---------------- lightbox ----------------
-    const lightbox = document.getElementById('lightbox');
-    document.addEventListener('click', ev => {
-      if (ev.target.matches('figure img')) {
-        lightbox.querySelector('img').src = ev.target.src;
-        lightbox.hidden = false;
-      } else if (ev.target.closest('#lightbox')) {
-        lightbox.hidden = true;
+      // ── follow a batch → GET /api/v1/batches/{id} ─────────────────────
+      let timer = null;
+      async function watch(batchId) {
+        clearTimeout(timer);
+        $('batchPanel').hidden = false;
+        $('batchPanel').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        const tick = async () => {
+          let s;
+          try {
+            const r = await fetch(`/api/v1/batches/${batchId}`, { cache: 'no-store' });
+            if (!r.ok) throw new Error('HTTP ' + r.status);
+            s = await r.json();
+          } catch (e) {
+            timer = setTimeout(tick, 2000);
+            return;
+          }
+          render(s);
+          if (s.status === 'PENDING' || s.status === 'PROCESSING') timer = setTimeout(tick, 1500);
+          else loadList();
+        };
+        tick();
       }
-    });
-    document.addEventListener('keydown', ev => { if (ev.key === 'Escape') lightbox.hidden = true; });
-}) ();
+
+      function render(s) {
+        $('bId').textContent = s.batch_id;
+        $('bName').textContent = s.batch_name || '';
+        $('bStatus').textContent = s.status;
+        $('bStatus').className = 'tag ' + s.status;
+        $('bCounts').innerHTML =
+          `Progress <b>${s.completed_images + s.failed_images} / ${s.total_images}</b>`
+          + `<span>Completed <b>${s.completed_images}</b></span>`
+          + `<span>Processing <b>${s.processing_images}</b></span>`
+          + `<span>Failed <b>${s.failed_images}</b></span>`
+          + `<span>Pending <b>${s.pending_images}</b></span>`;
+        const done = s.status !== 'PENDING' && s.status !== 'PROCESSING';
+        $('bBar').classList.toggle('done', done);
+        $('bBar').firstElementChild.style.width = s.progress_percentage + '%';
+        $('bRows').innerHTML = s.images.map((im, i) => `<tr>
+            <td>${i + 1}</td>
+            <td class="file">${esc(im.filename)}</td>
+            <td><span class="tag ${im.status}">${im.status === 'PROCESSING'
+              ? '<span class="spin"></span> ' : ''}${im.status}</span></td>
+            <td>${im.error_message ? esc(im.error_message)
+              : (im.output_available ? 'restored' : '')}</td>
+          </tr>`).join('');
+        const dl = $('bDownload');
+        dl.hidden = !(done && s.completed_images);
+        dl.href = `/api/v1/batches/${s.batch_id}/download`;
+        dl.textContent = s.failed_images
+          ? `Download output (${s.completed_images} of ${s.total_images})` : 'Download output';
+      }
+
+      // ── recent batches → GET /api/v1/batches ──────────────────────────
+      async function loadList() {
+        try {
+          const r = await fetch('/api/v1/batches?limit=10', { cache: 'no-store' });
+          if (!r.ok) return;
+          const rows = await r.json();
+          $('listPanel').hidden = !rows.length;
+          $('bList').innerHTML = rows.map(b => `<div class="item" data-id="${esc(b.batch_id)}">
+              <div>
+                <div class="who">${esc(b.batch_id)} ${b.batch_name ? '&middot; ' + esc(b.batch_name) : ''}</div>
+                <div class="meta">${b.completed_images}/${b.total_images} done`
+            + `${b.failed_images ? ', ' + b.failed_images + ' failed' : ''} &middot; ${esc(b.created_at || '')}</div>
+              </div>
+              <span class="tag ${b.status}">${b.status}</span>
+            </div>`).join('');
+          $('bList').querySelectorAll('.item').forEach(el =>
+            el.addEventListener('click', () => watch(el.dataset.id)));
+        } catch (e) { /* the API may not be running (Flask-only mode) */ }
+      }
+
+      // drag & drop onto either panel
+      for (const [drop, input] of [['oneDrop', 'oneFile'], ['folderDrop', 'folderFiles']]) {
+        const el = $(drop);
+        ['dragenter', 'dragover'].forEach(ev => el.addEventListener(ev, e => {
+          e.preventDefault(); el.classList.add('over');
+        }));
+        ['dragleave', 'drop'].forEach(ev => el.addEventListener(ev, e => {
+          e.preventDefault(); el.classList.remove('over');
+        }));
+        el.addEventListener('drop', e => {
+          $(input).files = e.dataTransfer.files;
+          $(input).dispatchEvent(new Event('change'));
+        });
+      }
+
+      loadList();
+    })();
   </script>
 </body>
 

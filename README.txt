@@ -113,6 +113,28 @@ GPU (NVIDIA)
   If the GPU runs out of memory on a very large image, that step runs on the
   CPU instead. The small shadow model always runs on the CPU.
 
+API (FastAPI)
+  Run the API service instead of app.py; it also serves the web page:
+      .venv\Scripts\python api.py
+  Then:
+      http://127.0.0.1:<port>/            the web page
+      http://127.0.0.1:<port>/api/docs    Swagger UI (try the endpoints)
+      http://127.0.0.1:<port>/api/redoc   the same, ReDoc style
+
+  POST /api/v1/images                      one image in, the restored file back in the
+                                           same response (blocks until finished)
+  POST /api/v1/batches                     a folder: upload one .zip as "folder", or give
+                                           "folder_path" (a folder on this machine)
+  GET  /api/v1/batches/<id>                progress: processed, remaining, failed, per image
+  GET  /api/v1/batches/<id>/download       the processed folder as a ZIP
+  GET  /api/v1/batches/<id>/report         report.csv
+
+  "checks" (optional, repeatable) limits which steps may run: dewrap, shadow, blur,
+  upscale, appearance, inpaint. Omit it and every step runs, with the models deciding
+  what each image needs.
+
+  app.py can still be started on its own (waitress, web page only, no /api/v1 endpoints).
+
 SETTINGS
   Thresholds, port, etc. are in the CONFIG block near the top of app.py.
 

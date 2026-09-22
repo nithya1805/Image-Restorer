@@ -864,6 +864,9 @@ app = Flask(__name__)
 app.config["MAX_CONTENT_LENGTH"] = CONFIG["max_upload_mb"] * 1024 * 1024
 app.config["TEMPLATES_AUTO_RELOAD"] = True  # re-read templates/index.html when it changes (no restart needed)
 
+from api_docs import docs_bp  # Swagger UI at /docs, OpenAPI at /openapi.json
+app.register_blueprint(docs_bp)
+
 
 # ---------------------------------------------------------------------------
 # Web: every upload is a run (a folder in results/), processed in the background one run
@@ -1115,32 +1118,210 @@ def thumb():
     return app.response_class(buf.tobytes(), mimetype="image/jpeg")
 
 
-@app.route("/start", methods=["POST"])
-def start():
-    """Save the upload in results/<run id>/input and queue it; the page then opens /run/<run id>."""
-    checks = set(request.form.getlist("checks")) & ALL_CHECKS or set(ALL_CHECKS)
-    files = [f for f in request.files.getlist("images") if f.filename]
-    if not files:
-        return {"error": "No images were uploaded."}, 400
+@app.route("/api/v1/images", methods=["POST"])
+def api_process_image():
+    """Process ONE image and return the restored file itself (synchronous, so the caller can
+    download it from this same request). Same formats and checks as a batch run.
 
+    Form fields: image (the file), checks (repeatable, or one comma-separated value).
+    The result keeps the format of the uploaded file. What was done is in the response headers:
+    X-Corrections, X-Steps-Detail, X-Resolution and X-Seconds.
+    """
+    f = request.files.get("image") or request.files.get("images")
+    if f is None or not f.filename:
+        return {"error": "no image uploaded (form field 'image')"}, 400
+
+    ext = Path(f.filename).suffix.lower()
+    if ext not in VALID_EXTS:
+        return {"error": f"unsupported file type '{ext}'", "supported": sorted(VALID_EXTS)}, 415
+
+    raw = [c for value in request.form.getlist("checks") for c in value.split(",")]
+    checks = {c.strip() for c in raw if c.strip()} & ALL_CHECKS or set(ALL_CHECKS)
+
+    data = f.read()
+    img = cv2.imdecode(np.frombuffer(data, np.uint8), cv2.IMREAD_COLOR)
+    if img is None:
+        return {"error": "could not read the image"}, 415
+
+    detail = []
+    t0 = time.time()
+    try:
+        w = run_workflow(img, data, checks,
+                         lambda stage, state, text="", hit=False:
+                         state != "running" and detail.append(f"{stage}={state}" + (f":{text}" if text else "")))
+        out = encode_image(w["image"], ext)
+    except Exception as e:
+        return {"error": f"processing failed: {e}"}, 500
+
+    def header(value, limit=800):
+        """HTTP headers must be plain ASCII: the step texts contain - and x."""
+        value = value.replace("—", "-").replace("–", "-").replace("×", "x")
+        value = value.encode("ascii", "replace").decode("ascii")
+        return value[:limit - 3] + "..." if len(value) > limit else value
+
+    resolution = "{}x{}".format(*w["size"]) + (" -> {}x{}".format(*w["upscaled_to"]) if w["upscaled_to"] else "")
+    resp = app.response_class(out, mimetype="application/octet-stream")
+    resp.headers["Content-Disposition"] =         f'attachment; filename="{quote(Path(f.filename).stem)}_restored{ext}"'
+    resp.headers["X-Corrections"] = header(", ".join(w["steps"]) or "none")
+    resp.headers["X-Steps-Detail"] = header(" | ".join(detail))
+    resp.headers["X-Resolution"] = header(resolution)
+    resp.headers["X-Seconds"] = f"{time.time() - t0:.1f}"
+    return resp
+
+
+def create_run(entries, checks):
+    """Save uploaded images under results/<run id>/input and queue the run.
+    entries: (name, bytes or error string) pairs. Returns (run_id, items)."""
     run_id = new_run_dir()
     input_dir = CONFIG["results_dir"] / run_id / "input"
     items, used = [], set()
-    for f in files:
-        rel = unique_path(safe_relpath(f.filename), used)
-        if Path(rel).suffix.lower() not in VALID_EXTS:
+    for name, data in entries:
+        rel = unique_path(safe_relpath(name), used)
+        if isinstance(data, str):                       # already rejected (bad zip, no images, ...)
+            items.append(new_item(rel, data))
+        elif Path(rel).suffix.lower() not in VALID_EXTS:
             items.append(new_item(rel, "Unsupported file type"))
-            continue
-        (input_dir / rel).parent.mkdir(parents=True, exist_ok=True)
-        f.save(input_dir / rel)
-        items.append(new_item(rel))
+        else:
+            (input_dir / rel).parent.mkdir(parents=True, exist_ok=True)
+            (input_dir / rel).write_bytes(data)
+            items.append(new_item(rel))
+
+    if not any(it["error"] is None for it in items):    # nothing usable: no run
+        shutil.rmtree(CONFIG["results_dir"] / run_id, ignore_errors=True)
+        return None, items
 
     job = {"id": run_id, "checks": checks, "state": "queued", "items": items, "results": []}
     with JOBS_LOCK:
         JOBS[run_id] = job
     ensure_worker()
     JOB_QUEUE.put(run_id)
+    return run_id, items
+
+
+def zip_entries(name, data):
+    """Images inside an uploaded ZIP, as (name, bytes) pairs, keeping the folder structure."""
+    try:
+        with zipfile.ZipFile(io.BytesIO(data)) as zf:
+            wanted = [e for e in zf.infolist()
+                      if not e.is_dir() and Path(e.filename).suffix.lower() in VALID_EXTS
+                      and not Path(e.filename).name.startswith("._") and "__MACOSX" not in e.filename]
+            return [(e.filename, zf.read(e)) for e in wanted] or [(name, "No images in the ZIP")]
+    except zipfile.BadZipFile:
+        return [(name, "Not a readable ZIP file")]
+
+
+def uploaded_entries(files):
+    """Uploaded files -> (name, bytes) pairs; a .zip is expanded into the images it holds."""
+    entries = []
+    for f in files:
+        data = f.read()
+        if Path(f.filename).suffix.lower() == ".zip":
+            entries += zip_entries(f.filename, data)
+        else:
+            entries.append((f.filename, data))
+    return entries
+
+
+@app.route("/start", methods=["POST"])
+def start():
+    """Upload from the web page (images, a folder's files, or a .zip); opens /run/<run id>."""
+    checks = set(request.form.getlist("checks")) & ALL_CHECKS or set(ALL_CHECKS)
+    files = [f for f in request.files.getlist("images") if f.filename]
+    if not files:
+        return {"error": "No images were uploaded."}, 400
+
+    run_id, items = create_run(uploaded_entries(files), checks)
+    if run_id is None:
+        return {"error": "No usable images were uploaded.",
+                "details": [{"file": it["name"], "error": it["error"]} for it in items]}, 400
     return {"run_id": run_id, "url": f"/run/{run_id}"}
+
+
+@app.route("/api/v1/batches", methods=["POST"])
+def api_create_batch():
+    """Process a FOLDER of images. Give it either way:
+      folder      the files of an unzipped folder, or a .zip of the folder (sub-folders kept), or
+      folder_path a folder on the machine running the app, e.g. C:\\scans\\batch1
+    Every image in it is processed one by one in the background."""
+    raw = [c for value in request.form.getlist("checks") for c in value.split(",")]
+    checks = {c.strip() for c in raw if c.strip()} & ALL_CHECKS or set(ALL_CHECKS)
+
+    files = [x for x in request.files.getlist("folder") + request.files.getlist("images") + request.files.getlist("files") if x.filename]
+    folder_path = (request.form.get("folder_path") or "").strip().strip('"')
+
+    if files:
+        entries = uploaded_entries(files)
+        first_name = files[0].filename or "upload"
+        source = first_name.split("/")[0].split("\\")[0] if "/" in first_name or "\\" in first_name else (first_name if len(files) == 1 else f"{len(files)} files uploaded")
+    elif folder_path:
+        src = Path(folder_path)
+        if not src.is_dir():
+            return {"error": f"folder not found on the server: {folder_path}"}, 404
+        found = sorted(x for x in src.rglob("*") if x.is_file() and x.suffix.lower() in VALID_EXTS)
+        if not found:
+            return {"error": f"no images ({', '.join(sorted(VALID_EXTS))}) in {folder_path}"}, 400
+        entries = [(f"{src.name}/{x.relative_to(src).as_posix()}", x.read_bytes()) for x in found]
+        source = str(src)
+    else:
+        return {"error": "no folder given: upload a folder or .zip as 'folder', or send 'folder_path' "
+                         "(a folder on the machine running the app)"}, 400
+
+    run_id, items = create_run(entries, checks)
+    if run_id is None:
+        return {"error": "no usable images in the folder",
+                "details": [{"file": it["name"], "error": it["error"]} for it in items]}, 400
+    return {"batch_id": run_id, "source": source, "total": len(items), "checks": sorted(checks),
+            "status_url": f"/api/v1/batches/{run_id}",
+            "download_url": f"/api/v1/batches/{run_id}/download",
+            "report_url": f"/api/v1/batches/{run_id}/report"}
+
+
+@app.route("/api/v1/batches/<run_id>")
+def api_batch_status(run_id):
+    """How far the batch has got: processed, remaining, failed, and what happened per image."""
+    job = JOBS.get(run_id)
+    if job is None:
+        return {"error": "unknown batch id (the app may have been restarted)"}, 404
+    s = job_status(job)
+    done = s["done"]
+    failed = sum(1 for it in s["items"] if it["state"] == "error")
+    summary = {"batch_id": run_id, "state": s["state"], "total": s["total"], "processed": done,
+               "remaining": s["total"] - done, "failed": failed, "corrected": sum(
+                   1 for it in s["items"] if it["state"] == "done" and it["outcome"] not in ("", "No problems")),
+               "elapsed_seconds": s["elapsed"], "error": s["error"],
+               "download_url": f"/api/v1/batches/{run_id}/download",
+               "current": next((it["name"] for it in s["items"] if it["state"] == "processing"), None)}
+    if request.args.get("detail") == "full":
+        summary["items"] = s["items"]
+    else:
+        summary["images"] = [{"name": it["name"], "state": it["state"], "result": it["outcome"] or it["error"],
+                              "seconds": it["seconds"]} for it in s["items"]]
+    return summary
+
+
+@app.route("/api/v1/batches/<run_id>/download")
+def api_batch_download(run_id):
+    """The processed images as a ZIP (with report.csv inside). Only once the batch is done."""
+    job = JOBS.get(run_id)
+    run_dir = CONFIG["results_dir"] / run_id
+    if job is None and not run_dir.is_dir():
+        return {"error": "unknown batch id"}, 404
+    if job is not None and job["state"] != "done":
+        return {"error": f"batch is {job['state']}, not finished yet",
+                "status_url": f"/api/v1/batches/{run_id}"}, 409
+    zips = sorted(run_dir.glob("*_restored.zip"))
+    if not zips:
+        return {"error": "no result file for this batch"}, 404
+    return send_from_directory(run_dir, zips[0].name, as_attachment=True)
+
+
+@app.route("/api/v1/batches/<run_id>/report")
+def api_batch_report(run_id):
+    """report.csv: one row per image with the scores and corrections."""
+    run_dir = CONFIG["results_dir"] / run_id
+    if not (run_dir / "report.csv").is_file():
+        return {"error": "unknown batch id, or the report is not written yet"}, 404
+    return send_from_directory(run_dir, "report.csv", as_attachment=True)
 
 
 @app.route("/run/<run_id>")
